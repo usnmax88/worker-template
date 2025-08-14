@@ -38,15 +38,58 @@ def run_inference(prompt, img_path, wav_path):
 
 def handler(event):
     inp = event.get("input", {})
+    
+    # Handle test input (for RunPod testing)
+    if "name" in inp and "image_url" not in inp and "audio_url" not in inp:
+        return {
+            "ok": True,
+            "message": f"Hello {inp['name']}! This is a test response from OmniAvatar handler.",
+            "model": MODEL_SIZE,
+            "status": "test_mode",
+            "description": "Handler is working correctly and ready for OmniAvatar inference"
+        }
+    
+    # Handle OmniAvatar input
     prompt = inp.get("prompt", "Frontal talking head, neutral lighting.")
-    image_url = inp["image_url"]
-    audio_url = inp["audio_url"]
+    image_url = inp.get("image_url")
+    audio_url = inp.get("audio_url")
+    
+    # Validate required inputs
+    if not image_url or not audio_url:
+        return {
+            "ok": False,
+            "error": "Missing required inputs: image_url and audio_url are required",
+            "received_input": inp
+        }
+    
     img_path, wav_path = "/tmp/ref.png", "/tmp/line.wav"
-    urlretrieve(image_url, img_path)
-    urlretrieve(audio_url, wav_path)
-    ensure_repo()
-    mp4, logs = run_inference(prompt, img_path, wav_path)
-    b64 = base64.b64encode(open(mp4,'rb').read()).decode("utf-8")
-    return {"ok": True, "model": MODEL_SIZE, "mp4_base64": b64, "logs_tail": logs[-1000:]}
+    
+    try:
+        urlretrieve(image_url, img_path)
+        urlretrieve(audio_url, wav_path)
+    except Exception as e:
+        return {
+            "ok": False,
+            "error": f"Failed to download files: {str(e)}",
+            "image_url": image_url,
+            "audio_url": audio_url
+        }
+    
+    try:
+        ensure_repo()
+        mp4, logs = run_inference(prompt, img_path, wav_path)
+        b64 = base64.b64encode(open(mp4,'rb').read()).decode("utf-8")
+        return {
+            "ok": True, 
+            "model": MODEL_SIZE, 
+            "mp4_base64": b64, 
+            "logs_tail": logs[-1000:]
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "error": f"Inference failed: {str(e)}",
+            "logs": logs if 'logs' in locals() else "No logs available"
+        }
 
 runpod.serverless.start({"handler": handler})
