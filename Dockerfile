@@ -14,9 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set working directory to /workspace (OmniAvatar expects this)
 WORKDIR /workspace
 
-# Install Python dependencies
+# Install Python dependencies using pip instead of uv
 COPY requirements.txt /requirements.txt
-RUN uv pip install --upgrade -r /requirements.txt --no-cache-dir --system
+RUN pip install --upgrade -r /requirements.txt --no-cache-dir
 
 # Add the handler to /workspace (OmniAvatar path)
 COPY handler.py /workspace/handler.py
