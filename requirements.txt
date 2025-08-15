@@ -17,3 +17,6 @@ tqdm>=4.66,<5
 # Audio processing libraries required by OmniAvatar
 librosa>=0.10.0
 soundfile>=0.12.0
+
+# Safe tensor serialization required by OmniAvatar
+safetensors>=0.4.0
