@@ -13,3 +13,7 @@ numpy>=1.26,<3
 pillow>=10,<11
 requests>=2.31,<3
 tqdm>=4.66,<5
+
+# Audio processing libraries required by OmniAvatar
+librosa>=0.10.0
+soundfile>=0.12.0
