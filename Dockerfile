@@ -1,4 +1,4 @@
-# CUDA 12.1 base (works on more driver versions than 12.9)
+# CUDA 12.1 base 
 FROM runpod/base:0.6.2-cuda12.1.0
 
 # System deps
@@ -33,8 +33,11 @@ except Exception as e:
     print("Torch import failed:", e)
 PY
 
-# (Optional) Your handler; comment this line out if you don't have handler.py yet
-# COPY handler.py /workspace/handler.py
+COPY . /workspace/
+
+# Ensure handler.py is executable and in the right place
+RUN chmod +x /workspace/handler.py
 
 # Default command (you can override to run the test)
 CMD ["python", "-u", "/workspace/handler.py"]
+
