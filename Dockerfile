@@ -1,25 +1,25 @@
-# Use RunPod's CUDA 12.9 base image for better OmniAvatar compatibility
+# CUDA 12.9 base
 FROM runpod/base:0.7.0-ubuntu2404-cuda1290
 
-# replace the bare 'pip' call with python3.11 -m pip
-RUN python3.11 -m pip install --upgrade pip && \
-    python3.11 -m pip install --no-cache-dir -r /requirements.txt
-
-# Install system dependencies
+# System deps (no uv)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git ffmpeg wget curl ca-certificates \
-    libgl1 libglib2.0-0 python3-pip python3-venv \
+    libgl1 libglib2.0-0 python3 python3-pip python3-venv \
  && rm -rf /var/lib/apt/lists/*
 
-# Set working directory to /workspace (OmniAvatar expects this)
+# Make sure "python" exists and points to python3
+RUN ln -sf $(which python3) /usr/local/bin/python
+
+# Workdir
 WORKDIR /workspace
 
-# Install Python dependencies using pip instead of uv
-COPY requirements.txt /requirements.txt
-RUN pip install --upgrade -r /requirements.txt --no-cache-dir
+# Copy first, then install — and always bind pip to the same interpreter
+COPY requirements.txt ./requirements.txt
+RUN python -m pip install --upgrade pip && \
+    python -m pip install --no-cache-dir -r requirements.txt
 
-# Add the handler to /workspace (OmniAvatar path)
+# App
 COPY handler.py /workspace/handler.py
 
-# Run the handler from /workspace
+# Run
 CMD ["python", "-u", "/workspace/handler.py"]
