@@ -1,9 +1,9 @@
 # Use RunPod's CUDA 12.9 base image for better OmniAvatar compatibility
 FROM runpod/base:0.7.0-ubuntu2404-cuda1290
 
-# Set python3.11 as the default python
-RUN ln -sf $(which python3.11) /usr/local/bin/python && \
-    ln -sf $(which python3.11) /usr/local/bin/python3
+# replace the bare 'pip' call with python3.11 -m pip
+RUN python3.11 -m pip install --upgrade pip && \
+    python3.11 -m pip install --no-cache-dir -r /requirements.txt
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
