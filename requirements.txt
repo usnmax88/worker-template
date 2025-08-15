@@ -1,14 +1,15 @@
---extra-index-url https://download.pytorch.org/whl/cu129
+# Use the CUDA 12.1 wheels for PyTorch
+--extra-index-url https://download.pytorch.org/whl/cu121
+
 runpod>=1.6,<2.0
 
 # PyTorch trio (keep them in the same family)
-torch==2.8.0
-torchvision==0.23.0
-torchaudio==2.8.0
+torch==2.4.0
+torchvision==0.19.0
+torchaudio==2.4.0
 
 # Essentials
 numpy>=1.26,<3
 pillow>=10,<11
 requests>=2.31,<3
 tqdm>=4.66,<5
-
