@@ -1,10 +1,14 @@
 --extra-index-url https://download.pytorch.org/whl/cu129
+runpod>=1.6,<2.0
+
+# PyTorch trio (keep them in the same family)
 torch==2.8.0
 torchvision==0.23.0
 torchaudio==2.8.0
 
-# RunPod and OmniAvatar dependencies
-runpod
-huggingface_hub
-accelerate
-ffmpeg-python
+# Essentials
+numpy>=1.26,<3
+pillow>=10,<11
+requests>=2.31,<3
+tqdm>=4.66,<5
+
