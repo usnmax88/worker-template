@@ -35,59 +35,70 @@ def ensure_repo():
         return False, f"Failed to ensure repository: {str(e)}"
 
 def ensure_models():
-    """Ensure OmniAvatar models are downloaded and available."""
+    """Ensure complete OmniAvatar model set is downloaded and available."""
     try:
+        import huggingface_hub
+        
         # Define model paths
-        model_dir = ROOT / "checkpoints" / "pretrained_models" / "OmniAvatar-14B"
-        model_dir.mkdir(parents=True, exist_ok=True)
+        base_model_dir = ROOT / "checkpoints" / "pretrained_models" / "Wan2.1-T2V-14B"
+        omni_model_dir = ROOT / "checkpoints" / "pretrained_models" / "OmniAvatar-14B"
         
-        # Check if models already exist
-        pytorch_model = model_dir / "pytorch_model.pt"
-        if pytorch_model.exists():
-            print(f"Models already exist at {model_dir}")
-            return True, "Models ready"
+        # Create directories
+        base_model_dir.mkdir(parents=True, exist_ok=True)
+        omni_model_dir.mkdir(parents=True, exist_ok=True)
         
-        print(f"Models not found at {model_dir}, attempting to download...")
+        # Check if complete model set already exists
+        base_model_check = base_model_dir / "diffusion_pytorch_model-00001-of-00006.safetensors"
+        omni_model_check = omni_model_dir / "pytorch_model.pt"
         
-        # Try to download models using the OmniAvatar download script
-        download_script = ROOT / "scripts" / "download_models.py"
-        if download_script.exists():
-            print("Found download script, running it...")
-            result = subprocess.run([
-                "python", str(download_script)
-            ], cwd=ROOT, check=True, capture_output=True, text=True)
-            print("Download script completed successfully")
-        else:
-            print("Download script not found, checking for alternative methods...")
-            
-            # Try to find models in common locations or download from HuggingFace
-            # This is a fallback approach
-            print("Attempting to download models from HuggingFace...")
-            
-            # Use huggingface-hub to download models
+        if base_model_check.exists() and omni_model_check.exists():
+            print(f"Complete model set already exists")
+            print(f"  - Base models: {base_model_dir}")
+            print(f"  - OmniAvatar weights: {omni_model_dir}")
+            return True, "Complete model set ready"
+        
+        print("Ensuring complete model set is available...")
+        
+        # Step 1: Download base Wan2.1-T2V-14B models if missing
+        if not base_model_check.exists():
+            print("Downloading base Wan2.1-T2V-14B models...")
             try:
-                import huggingface_hub
-                print("Downloading OmniAvatar-14B models from HuggingFace...")
-                
-                # Download the model files
                 huggingface_hub.snapshot_download(
-                    repo_id="OmniAvatar/OmniAvatar-14B",
-                    local_dir=str(model_dir),
+                    repo_id="Wan-AI/Wan2.1-T2V-14B",
+                    local_dir=str(base_model_dir),
                     local_dir_use_symlinks=False
                 )
-                print("Models downloaded successfully from HuggingFace")
-                
-            except ImportError:
-                print("huggingface-hub not available, trying alternative approach...")
-                # Fallback: try to download specific files
-                return False, "Models not available and no download method found"
-        
-        # Verify models were downloaded
-        if pytorch_model.exists():
-            print(f"Models successfully downloaded to {model_dir}")
-            return True, "Models ready"
+                print("Base models downloaded successfully")
+            except Exception as e:
+                print(f"Failed to download base models: {e}")
+                return False, f"Base model download failed: {str(e)}"
         else:
-            return False, "Models still not found after download attempt"
+            print("Base models already exist")
+        
+        # Step 2: Download OmniAvatar weights if missing
+        if not omni_model_check.exists():
+            print("Downloading OmniAvatar-14B weights...")
+            try:
+                huggingface_hub.snapshot_download(
+                    repo_id="OmniAvatar/OmniAvatar-14B",
+                    local_dir=str(omni_model_dir),
+                    local_dir_use_symlinks=False
+                )
+                print("OmniAvatar weights downloaded successfully")
+            except Exception as e:
+                print(f"Failed to download OmniAvatar weights: {e}")
+                return False, f"OmniAvatar weights download failed: {str(e)}"
+        else:
+            print("OmniAvatar weights already exist")
+        
+        # Verify complete model set
+        if base_model_check.exists() and omni_model_check.exists():
+            print("Complete model set verified successfully")
+            print(f"  - Base models: {base_model_dir}")
+            print(f"  - OmniAvatar weights: {omni_model_dir}")
+            return True, "Complete model set ready"
+        else:
+            return False, "Model verification failed - some models still missing"
             
     except Exception as e:
         return False, f"Failed to ensure models: {str(e)}"
@@ -127,16 +138,27 @@ def check_environment():
     else:
         checks.append(f"❌ OmniAvatar root missing: {ROOT}")
     
-    # Check models (simple check - no downloading yet)
-    model_dir = ROOT / "checkpoints" / "pretrained_models" / "OmniAvatar-14B"
-    if model_dir.exists():
-        pytorch_model = model_dir / "pytorch_model.pt"
-        if pytorch_model.exists():
-            checks.append(f"✅ OmniAvatar models available: {pytorch_model}")
+    # Check complete model set
+    base_model_dir = ROOT / "checkpoints" / "pretrained_models" / "Wan2.1-T2V-14B"
+    omni_model_dir = ROOT / "checkpoints" / "pretrained_models" / "OmniAvatar-14B"
+    
+    if base_model_dir.exists():
+        base_model_check = base_model_dir / "diffusion_pytorch_model-00001-of-00006.safetensors"
+        if base_model_check.exists():
+            checks.append(f"✅ Base Wan2.1-T2V-14B models available: {base_model_check}")
         else:
-            checks.append(f"❌ OmniAvatar models missing: {pytorch_model}")
+            checks.append(f"❌ Base Wan2.1-T2V-14B models missing: {base_model_check}")
     else:
-        checks.append(f"❌ OmniAvatar models directory missing: {model_dir}")
+        checks.append(f"❌ Base models directory missing: {base_model_dir}")
+    
+    if omni_model_dir.exists():
+        omni_model_check = omni_model_dir / "pytorch_model.pt"
+        if omni_model_check.exists():
+            checks.append(f"✅ OmniAvatar weights available: {omni_model_check}")
+        else:
+            checks.append(f"❌ OmniAvatar weights missing: {omni_model_check}")
+    else:
+        checks.append(f"❌ OmniAvatar weights directory missing: {omni_model_dir}")
     
     return checks
 
