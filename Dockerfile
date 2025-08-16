@@ -5,7 +5,8 @@ FROM runpod/base:0.6.2-cuda12.1.0
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip python3-venv \
     git ffmpeg wget curl ca-certificates \
-    libgl1 libglib2.0-0 && \
+    libgl1 libglib2.0-0 \
+    libsndfile1 && \
     rm -rf /var/lib/apt/lists/*
 
 # Make sure "python" exists and is python3
