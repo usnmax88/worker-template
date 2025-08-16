@@ -69,6 +69,17 @@ def check_environment():
     else:
         checks.append(f"❌ OmniAvatar root missing: {ROOT}")
     
+    # Check models (simple check - no downloading yet)
+    model_dir = ROOT / "checkpoints" / "pretrained_models" / "OmniAvatar-14B"
+    if model_dir.exists():
+        pytorch_model = model_dir / "pytorch_model.pt"
+        if pytorch_model.exists():
+            checks.append(f"✅ OmniAvatar models available: {pytorch_model}")
+        else:
+            checks.append(f"❌ OmniAvatar models missing: {pytorch_model}")
+    else:
+        checks.append(f"❌ OmniAvatar models directory missing: {model_dir}")
+    
     return checks
 
 def run_inference(prompt, img_path, wav_path):
