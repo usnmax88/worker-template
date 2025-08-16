@@ -47,3 +47,22 @@ PyYAML
 
 # HuggingFace Hub for model downloading
 huggingface-hub>=0.20.0
+
+# Fast HuggingFace downloads
+hf_transfer>=0.1.0
+
+# Optional acceleration and optimization
+flash_attn>=2.0.0
+
+# Model loading and distributed inference
+accelerate>=0.20.0
+
+# Quantization support
+bitsandbytes>=0.41.0
+
+# Text tokenization
+tokenizers>=0.15.0
+
+# Configuration and serialization
+protobuf>=4.0.0
+regex>=2023.0.0
