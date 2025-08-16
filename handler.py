@@ -34,6 +34,64 @@ def ensure_repo():
     except Exception as e:
         return False, f"Failed to ensure repository: {str(e)}"
 
+def ensure_models():
+    """Ensure OmniAvatar models are downloaded and available."""
+    try:
+        # Define model paths
+        model_dir = ROOT / "checkpoints" / "pretrained_models" / "OmniAvatar-14B"
+        model_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Check if models already exist
+        pytorch_model = model_dir / "pytorch_model.pt"
+        if pytorch_model.exists():
+            print(f"Models already exist at {model_dir}")
+            return True, "Models ready"
+        
+        print(f"Models not found at {model_dir}, attempting to download...")
+        
+        # Try to download models using the OmniAvatar download script
+        download_script = ROOT / "scripts" / "download_models.py"
+        if download_script.exists():
+            print("Found download script, running it...")
+            result = subprocess.run([
+                "python", str(download_script)
+            ], cwd=ROOT, check=True, capture_output=True, text=True)
+            print("Download script completed successfully")
+        else:
+            print("Download script not found, checking for alternative methods...")
+            
+            # Try to find models in common locations or download from HuggingFace
+            # This is a fallback approach
+            print("Attempting to download models from HuggingFace...")
+            
+            # Use huggingface-hub to download models
+            try:
+                import huggingface_hub
+                print("Downloading OmniAvatar-14B models from HuggingFace...")
+                
+                # Download the model files
+                huggingface_hub.snapshot_download(
+                    repo_id="Omni-Avatar/OmniAvatar-14B",
+                    local_dir=str(model_dir),
+                    local_dir_use_symlinks=False
+                )
+                print("Models downloaded successfully from HuggingFace")
+                
+            except ImportError:
+                print("huggingface-hub not available, trying alternative approach...")
+                # Fallback: try to download specific files
+                return False, "Models not available and no download method found"
+        
+        # Verify models were downloaded
+        if pytorch_model.exists():
+            print(f"Models successfully downloaded to {model_dir}")
+            return True, "Models ready"
+        else:
+            return False, "Models still not found after download attempt"
+            
+    except Exception as e:
+        return False, f"Failed to ensure models: {str(e)}"
+
 def check_environment():
     """Check if the environment is properly set up."""
     checks = []
@@ -93,6 +151,11 @@ def run_inference(prompt, img_path, wav_path):
         repo_ok, repo_msg = ensure_repo()
         if not repo_ok:
             raise Exception(f"Repository setup failed: {repo_msg}")
+        
+        # Ensure models are available
+        models_ok, models_msg = ensure_models()
+        if not models_ok:
+            raise Exception(f"Models setup failed: {models_msg}")
         
         cfg = CONFIG_14B if MODEL_SIZE == "14B" else CONFIG_13B
         if not cfg.exists():
