@@ -20,3 +20,30 @@ soundfile>=0.12.0
 
 # Safe tensor serialization required by OmniAvatar
 safetensors>=0.4.0
+
+# Image I/O library required by OmniAvatar
+imageio>=2.31.0
+
+# Scientific computing libraries required by OmniAvatar
+scipy>=1.14.0
+
+# Parameter Efficient Fine-Tuning (PEFT) for OmniAvatar
+peft>=0.15.1
+
+# Hugging Face transformers for text encoding
+transformers>=4.52.3
+
+# XFuser library specific to OmniAvatar
+xfuser>=0.4.1
+
+# Text processing utilities
+ftfy
+
+# Einstein operations for deep learning
+einops
+
+# YAML parsing for config files
+PyYAML
+
+# HuggingFace Hub for model downloading
+huggingface-hub>=0.20.0
