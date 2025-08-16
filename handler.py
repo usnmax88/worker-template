@@ -74,16 +74,46 @@ def ensure_repo():
 
 # ---------- Model setup ----------
 def _download(repo_id: str, local_dir: Path):
-    """Download a HuggingFace repository to local directory."""
-    from huggingface_hub import snapshot_download
-    local_dir.mkdir(parents=True, exist_ok=True)
-    snapshot_download(
-        repo_id=repo_id,
-        local_dir=str(local_dir),
-        local_dir_use_symlinks=False,
-        resume_download=True,
-        token=HF_TOKEN
-    )
+    """Download a HuggingFace repository to local directory with compatibility handling."""
+    try:
+        from huggingface_hub import snapshot_download
+        local_dir.mkdir(parents=True, exist_ok=True)
+        snapshot_download(
+            repo_id=repo_id,
+            local_dir=str(local_dir),
+            local_dir_use_symlinks=False,
+            resume_download=True,
+            token=HF_TOKEN
+        )
+    except ImportError as e:
+        if "HfHubHTTPError" in str(e):
+            _log(f"HuggingFace Hub version compatibility issue: {e}")
+            _log("Attempting to use alternative download method...")
+            # Fallback to git clone if huggingface_hub is not compatible
+            try:
+                import subprocess
+                if local_dir.exists():
+                    import shutil
+                    shutil.rmtree(local_dir)
+                local_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Use git clone as fallback
+                clone_url = f"https://huggingface.co/{repo_id}"
+                if HF_TOKEN:
+                    clone_url = f"https://{HF_TOKEN}@huggingface.co/{repo_id}"
+                
+                subprocess.run(
+                    ["git", "clone", "--depth", "1", clone_url, str(local_dir)],
+                    check=True, capture_output=True, text=True
+                )
+                _log(f"Successfully cloned {repo_id} using git fallback")
+            except Exception as git_error:
+                raise Exception(f"Both huggingface_hub and git fallback failed: {git_error}")
+        else:
+            raise e
+    except Exception as e:
+        _log(f"Download failed for {repo_id}: {e}")
+        raise e
 
 def _verify_wan():
     """Verify that all required Wan2.1-T2V-14B model files are present."""
